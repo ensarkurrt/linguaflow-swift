@@ -3,19 +3,54 @@
   import DeviceCheck
   import Foundation
 
+  private actor AppAttestServiceClient {
+    private let service = DCAppAttestService.shared
+
+    func isSupported() -> Bool { service.isSupported }
+
+    func generateKey() async throws -> String {
+      try await withCheckedThrowingContinuation { continuation in
+        service.generateKey { keyId, error in
+          if let error { continuation.resume(throwing: error) }
+          else if let keyId { continuation.resume(returning: keyId) }
+          else { continuation.resume(throwing: LinguaFlowError.unavailable) }
+        }
+      }
+    }
+
+    func attestKey(_ keyId: String, clientDataHash: Data) async throws -> Data {
+      try await withCheckedThrowingContinuation { continuation in
+        service.attestKey(keyId, clientDataHash: clientDataHash) { attestation, error in
+          if let error { continuation.resume(throwing: error) }
+          else if let attestation { continuation.resume(returning: attestation) }
+          else { continuation.resume(throwing: LinguaFlowError.unavailable) }
+        }
+      }
+    }
+
+    func generateAssertion(_ keyId: String, clientDataHash: Data) async throws -> Data {
+      try await withCheckedThrowingContinuation { continuation in
+        service.generateAssertion(keyId, clientDataHash: clientDataHash) { assertion, error in
+          if let error { continuation.resume(throwing: error) }
+          else if let assertion { continuation.resume(returning: assertion) }
+          else { continuation.resume(throwing: LinguaFlowError.unavailable) }
+        }
+      }
+    }
+  }
+
   public actor AppAttestProvider: DeviceIntegrityProvider {
     public enum Environment: String, Sendable { case development, production }
-    private let service: DCAppAttestService
+    private let service = AppAttestServiceClient()
     private let session: URLSession
     private let defaults: UserDefaults
     private var grants: [String: IntegrityGrantResponseDto] = [:]
     private let environment: Environment
 
     public init(
-      service: DCAppAttestService = .shared, session: URLSession = .shared,
-      defaults: UserDefaults = .standard, environment: Environment = .production
+      session: URLSession = .shared, defaults: UserDefaults = .standard,
+      environment: Environment = .production
     ) {
-      self.service = service
       self.session = session
       self.defaults = defaults
       self.environment = environment
@@ -29,7 +64,7 @@
       if let grant = grants[branchKey], grant.expiresAt > Date().addingTimeInterval(30) {
         return grant.token
       }
-      guard service.isSupported else { throw LinguaFlowError.unavailable }
+      guard await service.isSupported() else { throw LinguaFlowError.unavailable }
       guard let bundleId = Bundle.main.bundleIdentifier else {
         throw LinguaFlowError.invalidConfiguration("Bundle identifier is unavailable")
       }
