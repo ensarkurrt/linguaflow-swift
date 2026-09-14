@@ -9,32 +9,32 @@ import Foundation
 
 public struct DeliveryRolloutResponseDto: Sendable, Codable, Hashable {
 
-    public enum Selection: String, Sendable, Codable, CaseIterable {
-        case candidate = "candidate"
-        case stable = "stable"
-    }
-    public var candidateReleaseId: String
-    public var percentage: Int
-    public var selection: Selection
+  public enum Selection: String, Sendable, Codable, CaseIterable {
+    case candidate = "candidate"
+    case stable = "stable"
+  }
+  public var candidateReleaseId: String
+  public var percentage: Int
+  public var selection: Selection
 
-    public init(candidateReleaseId: String, percentage: Int, selection: Selection) {
-        self.candidateReleaseId = candidateReleaseId
-        self.percentage = percentage
-        self.selection = selection
-    }
+  public init(candidateReleaseId: String, percentage: Int, selection: Selection) {
+    self.candidateReleaseId = candidateReleaseId
+    self.percentage = percentage
+    self.selection = selection
+  }
 
-    public enum CodingKeys: String, CodingKey, CaseIterable {
-        case candidateReleaseId
-        case percentage
-        case selection
-    }
+  public enum CodingKeys: String, CodingKey, CaseIterable {
+    case candidateReleaseId
+    case percentage
+    case selection
+  }
 
-    // Encodable protocol methods
+  // Encodable protocol methods
 
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(candidateReleaseId, forKey: .candidateReleaseId)
-        try container.encode(percentage, forKey: .percentage)
-        try container.encode(selection, forKey: .selection)
-    }
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(candidateReleaseId, forKey: .candidateReleaseId)
+    try container.encode(percentage, forKey: .percentage)
+    try container.encode(selection, forKey: .selection)
+  }
 }

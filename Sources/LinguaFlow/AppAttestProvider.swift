@@ -11,9 +11,13 @@
     func generateKey() async throws -> String {
       try await withCheckedThrowingContinuation { continuation in
         service.generateKey { keyId, error in
-          if let error { continuation.resume(throwing: error) }
-          else if let keyId { continuation.resume(returning: keyId) }
-          else { continuation.resume(throwing: LinguaFlowError.unavailable) }
+          if let error {
+            continuation.resume(throwing: error)
+          } else if let keyId {
+            continuation.resume(returning: keyId)
+          } else {
+            continuation.resume(throwing: LinguaFlowError.unavailable)
+          }
         }
       }
     }
@@ -21,9 +25,13 @@
     func attestKey(_ keyId: String, clientDataHash: Data) async throws -> Data {
       try await withCheckedThrowingContinuation { continuation in
         service.attestKey(keyId, clientDataHash: clientDataHash) { attestation, error in
-          if let error { continuation.resume(throwing: error) }
-          else if let attestation { continuation.resume(returning: attestation) }
-          else { continuation.resume(throwing: LinguaFlowError.unavailable) }
+          if let error {
+            continuation.resume(throwing: error)
+          } else if let attestation {
+            continuation.resume(returning: attestation)
+          } else {
+            continuation.resume(throwing: LinguaFlowError.unavailable)
+          }
         }
       }
     }
@@ -31,9 +39,13 @@
     func generateAssertion(_ keyId: String, clientDataHash: Data) async throws -> Data {
       try await withCheckedThrowingContinuation { continuation in
         service.generateAssertion(keyId, clientDataHash: clientDataHash) { assertion, error in
-          if let error { continuation.resume(throwing: error) }
-          else if let assertion { continuation.resume(returning: assertion) }
-          else { continuation.resume(throwing: LinguaFlowError.unavailable) }
+          if let error {
+            continuation.resume(throwing: error)
+          } else if let assertion {
+            continuation.resume(returning: assertion)
+          } else {
+            continuation.resume(throwing: LinguaFlowError.unavailable)
+          }
         }
       }
     }
@@ -94,6 +106,8 @@
         let assertion: Data
         do {
           assertion = try await service.generateAssertion(keyId, clientDataHash: hash)
+        } catch let error as CancellationError {
+          throw error
         } catch {
           guard mayRecoverKey else { throw error }
           defaults.removeObject(forKey: keyStorage)
@@ -126,6 +140,7 @@
       let url = linguaFlowAPIOrigin.appendingPathComponent(path)
       var request = URLRequest(url: url)
       request.httpMethod = "POST"
+      request.timeoutInterval = 30
       if let body {
         request.httpBody = try JSONEncoder().encode(body)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -134,13 +149,17 @@
       request.setValue(linguaFlowSwiftSDKVersion, forHTTPHeaderField: "X-LinguaFlow-SDK-Version")
       request.setValue(
         linguaFlowRuntimeContractVersion, forHTTPHeaderField: "X-LinguaFlow-Contract-Version")
-      let (data, response) = try await session.data(for: request)
-      guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-        throw LinguaFlowError.delivery((response as? HTTPURLResponse)?.statusCode ?? 0)
-      }
+      let data = try await runtimeData(
+        session: session, request: request, maximumBytes: 256 * 1024)
       let decoder = JSONDecoder()
       decoder.dateDecodingStrategy = .iso8601
-      return try decoder.decode(Response.self, from: data)
+      do {
+        return try decoder.decode(Response.self, from: data)
+      } catch let error as CancellationError {
+        throw error
+      } catch {
+        throw LinguaFlowError.invalidPayload
+      }
     }
   }
 

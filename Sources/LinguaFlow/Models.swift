@@ -48,6 +48,18 @@ public struct LinguaFlowConfig: Sendable {
   public let missingKeyTelemetryEnabled: Bool
   public let appVersion: String
 
+  var resolvedAppVersion: String {
+    if !appVersion.isEmpty { return appVersion }
+    let name = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+    let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+    switch (name?.isEmpty == false ? name : nil, build?.isEmpty == false ? build : nil) {
+    case (let name?, let build?): return "\(name) (\(build))"
+    case (let name?, nil): return name
+    case (nil, let build?): return build
+    default: return ""
+    }
+  }
+
   public init(
     branchKey: String, overlay: String? = nil, cacheTTL: TimeInterval = 300,
     bundledDirectory: String = "linguaflow", offlineEnabled: Bool = true,
@@ -65,6 +77,13 @@ public struct LinguaFlowConfig: Sendable {
     }
     guard cacheTTL >= 0 else {
       throw LinguaFlowError.invalidConfiguration("TTL cannot be negative")
+    }
+    guard
+      !bundledDirectory.hasPrefix("/"), !bundledDirectory.contains(".."),
+      !bundledDirectory.contains("://")
+    else {
+      throw LinguaFlowError.invalidConfiguration(
+        "Bundled directory must be an application-relative resource path")
     }
     self.branchKey = branchKey
     self.overlay = overlay
@@ -108,6 +127,28 @@ indirect enum JSONValue: Codable, Sendable {
     switch self {
     case .string(let value): try container.encode(value)
     case .object(let value): try container.encode(value)
+    }
+  }
+}
+
+func validateTranslationBundle(_ values: [String: JSONValue]) throws {
+  struct PendingObject {
+    let value: [String: JSONValue]
+    let depth: Int
+  }
+  let unsafeKeys: Set<String> = ["__proto__", "prototype", "constructor"]
+  var pending = [PendingObject(value: values, depth: 0)]
+  var valueCount = 0
+  while let current = pending.popLast() {
+    guard current.depth <= 32 else { throw LinguaFlowError.invalidPayload }
+    for (key, value) in current.value {
+      valueCount += 1
+      guard valueCount <= 100_000, !key.isEmpty, !unsafeKeys.contains(key) else {
+        throw LinguaFlowError.invalidPayload
+      }
+      if case .object(let object) = value {
+        pending.append(PendingObject(value: object, depth: current.depth + 1))
+      }
     }
   }
 }

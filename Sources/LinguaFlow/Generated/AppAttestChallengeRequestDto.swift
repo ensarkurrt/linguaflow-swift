@@ -9,28 +9,28 @@ import Foundation
 
 public struct AppAttestChallengeRequestDto: Sendable, Codable, Hashable {
 
-    public enum Environment: String, Sendable, Codable, CaseIterable {
-        case development = "development"
-        case production = "production"
-    }
-    public var bundleId: String
-    public var environment: Environment
+  public enum Environment: String, Sendable, Codable, CaseIterable {
+    case development = "development"
+    case production = "production"
+  }
+  public var bundleId: String
+  public var environment: Environment
 
-    public init(bundleId: String, environment: Environment) {
-        self.bundleId = bundleId
-        self.environment = environment
-    }
+  public init(bundleId: String, environment: Environment) {
+    self.bundleId = bundleId
+    self.environment = environment
+  }
 
-    public enum CodingKeys: String, CodingKey, CaseIterable {
-        case bundleId
-        case environment
-    }
+  public enum CodingKeys: String, CodingKey, CaseIterable {
+    case bundleId
+    case environment
+  }
 
-    // Encodable protocol methods
+  // Encodable protocol methods
 
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(bundleId, forKey: .bundleId)
-        try container.encode(environment, forKey: .environment)
-    }
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(bundleId, forKey: .bundleId)
+    try container.encode(environment, forKey: .environment)
+  }
 }

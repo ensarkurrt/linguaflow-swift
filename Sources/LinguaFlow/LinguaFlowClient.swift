@@ -17,6 +17,7 @@ public actor LinguaFlowClient {
   private let api: DeliveryAPI
   private let bundleProvider: @Sendable (String) -> Data?
   private let missingKeys: MissingKeyReporter
+  private let runtimeMetrics: RuntimeMetricReporter
   private var values: [String: JSONValue] = [:]
   private var lastChecked = Date.distantPast
 
@@ -37,6 +38,8 @@ public actor LinguaFlowClient {
       integrityProvider: integrityProvider)
     self.api = api
     self.missingKeys = MissingKeyReporter(config: config, api: api)
+    self.runtimeMetrics = RuntimeMetricReporter(
+      config: config, api: api, enabled: integrityProvider != nil)
     self.bundleProvider = bundleProvider
     self.selectedLocale = store.selectedLocale
   }
@@ -48,6 +51,8 @@ public actor LinguaFlowClient {
     if !force, !values.isEmpty, Date().timeIntervalSince(lastChecked) <= config.cacheTTL { return }
     do {
       try await activateRemote(deviceLocale)
+    } catch let error as CancellationError {
+      throw error
     } catch {
       guard config.offlineEnabled, activateOffline(deviceLocale) else { throw error }
     }
@@ -70,6 +75,12 @@ public actor LinguaFlowClient {
 
   public func flushMissingKeys() async {
     await missingKeys.flush()
+    await runtimeMetrics.flush()
+  }
+
+  public func shutdown() async {
+    await missingKeys.shutdown()
+    await runtimeMetrics.shutdown()
   }
 
   private func activateRemote(_ deviceLocale: String) async throws {
@@ -77,6 +88,7 @@ public actor LinguaFlowClient {
       locale: selectedLocale ?? deviceLocale,
       explicit: selectedLocale != nil)
     manifest = remoteManifest
+    await runtimeMetrics.record(.deliveryRequest, outcome: .success, manifest: remoteManifest)
     lastChecked = Date()
     try store.saveManifest(remoteManifest)
     if selectedLocale != nil, remoteManifest.reason == .fallback {
@@ -89,11 +101,25 @@ public actor LinguaFlowClient {
       activate(cached!.data, source: .downloaded)
       return
     }
-    switch try await api.bundle(locale: remoteManifest.resolvedLocale, etag: cached?.etag) {
+    let delivery: BundleDelivery
+    do {
+      delivery = try await api.bundle(locale: remoteManifest.resolvedLocale, etag: cached?.etag)
+      await runtimeMetrics.record(.deliveryRequest, outcome: .success, manifest: remoteManifest)
+    } catch {
+      await runtimeMetrics.record(
+        .deliveryRequest, outcome: metricOutcome(error), manifest: remoteManifest)
+      await runtimeMetrics.record(
+        error as? LinguaFlowError == .invalidPayload ? .bundleParse : .bundleDownload,
+        outcome: .failure, manifest: remoteManifest)
+      throw error
+    }
+    switch delivery {
     case .notModified:
       guard let cached else { throw LinguaFlowError.invalidPayload }
       activate(cached.data, source: .downloaded)
     case .content(let body, let etag):
+      await runtimeMetrics.record(.bundleDownload, outcome: .success, manifest: remoteManifest)
+      await runtimeMetrics.record(.bundleParse, outcome: .success, manifest: remoteManifest)
       try store.saveBundle(
         CachedBundle(releaseId: remoteManifest.releaseId, etag: etag, data: body),
         locale: remoteManifest.resolvedLocale)
@@ -111,7 +137,8 @@ public actor LinguaFlowClient {
     }
     guard
       let data = bundleProvider("\(config.bundledDirectory)/\(locale).json"),
-      let body = try? JSONDecoder().decode([String: JSONValue].self, from: data)
+      let body = try? JSONDecoder().decode([String: JSONValue].self, from: data),
+      (try? validateTranslationBundle(body)) != nil
     else { return false }
     activate(body, source: .bundled)
     return true
@@ -135,10 +162,15 @@ public actor LinguaFlowClient {
       cursor = next
     }
     guard case .string(let pattern) = cursor else { return try missing(path, fallback) }
-    return try ICUMessageFormatter.format(
-      pattern,
-      arguments: arguments,
-      locale: manifest?.resolvedLocale ?? "en")
+    do {
+      let result = try ICUMessageFormatter.format(
+        pattern, arguments: arguments, locale: manifest?.resolvedLocale ?? "en")
+      Task { await runtimeMetrics.record(.icuFormat, outcome: .success, manifest: manifest) }
+      return result
+    } catch {
+      Task { await runtimeMetrics.record(.icuFormat, outcome: .failure, manifest: manifest) }
+      throw error
+    }
   }
 
   private func missing(_ path: String, _ fallback: String) throws -> String {
@@ -165,4 +197,10 @@ public actor LinguaFlowClient {
     else { return nil }
     return try? Data(contentsOf: url)
   }
+}
+
+private func metricOutcome(_ error: Error) -> RuntimeMetricItemDto.Outcome {
+  if (error as? URLError)?.code == .timedOut { return .timeout }
+  if case .delivery(let status) = error as? LinguaFlowError, status >= 500 { return .serverError }
+  return .failure
 }

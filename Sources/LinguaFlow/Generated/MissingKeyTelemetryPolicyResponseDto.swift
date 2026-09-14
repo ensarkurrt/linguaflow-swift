@@ -8,24 +8,24 @@
 import Foundation
 
 public struct MissingKeyTelemetryPolicyResponseDto: Sendable, Codable, Hashable {
-    public var enabled: Bool
-    public var maxBatchSize: Int
+  public var enabled: Bool
+  public var maxBatchSize: Int
 
-    public init(enabled: Bool, maxBatchSize: Int) {
-        self.enabled = enabled
-        self.maxBatchSize = maxBatchSize
-    }
+  public init(enabled: Bool, maxBatchSize: Int) {
+    self.enabled = enabled
+    self.maxBatchSize = maxBatchSize
+  }
 
-    public enum CodingKeys: String, CodingKey, CaseIterable {
-        case enabled
-        case maxBatchSize
-    }
+  public enum CodingKeys: String, CodingKey, CaseIterable {
+    case enabled
+    case maxBatchSize
+  }
 
-    // Encodable protocol methods
+  // Encodable protocol methods
 
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(enabled, forKey: .enabled)
-        try container.encode(maxBatchSize, forKey: .maxBatchSize)
-    }
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(enabled, forKey: .enabled)
+    try container.encode(maxBatchSize, forKey: .maxBatchSize)
+  }
 }

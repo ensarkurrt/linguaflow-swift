@@ -9,85 +9,96 @@ import Foundation
 
 public struct DeliveryManifestResponseDto: Sendable, Codable, Hashable {
 
-    public enum Version: Int, Sendable, Codable, CaseIterable {
-        case _1 = 1
-    }
-    public enum Reason: String, Sendable, Codable, CaseIterable {
-        case selected = "selected"
-        case mapped = "mapped"
-        case device = "device"
-        case fallback = "fallback"
-    }
-    public var version: Version
-    public var releaseId: String
-    public var sequence: Int
-    public var requestedLocale: String
-    public var resolvedLocale: String
-    public var reason: Reason
-    public var fallbackLocale: String
-    public var supportedLocales: [String]
-    public var translatedLocales: [String]
-    public var localeMappings: [String: String]
-    public var rollout: DeliveryRolloutResponseDto
-    public var bundlePath: String
-    public var overlays: [String]
-    public var overlay: String?
-    public var missingKeyTelemetry: MissingKeyTelemetryPolicyResponseDto
+  public enum Version: Int, Sendable, Codable, CaseIterable {
+    case _2 = 2
+  }
+  public enum Reason: String, Sendable, Codable, CaseIterable {
+    case selected = "selected"
+    case mapped = "mapped"
+    case device = "device"
+    case fallback = "fallback"
+  }
+  public var version: Version
+  public var releaseId: String
+  public var sequence: Int
+  public var requestedLocale: String
+  public var resolvedLocale: String
+  public var reason: Reason
+  public var fallbackLocale: String
+  public var supportedLocales: [String]
+  public var translatedLocales: [String]
+  public var localeMappings: [String: String]
+  public var rollout: DeliveryRolloutResponseDto
+  public var bundlePath: String
+  public var overlays: [String]
+  public var overlay: String?
+  public var missingKeyTelemetry: MissingKeyTelemetryPolicyResponseDto
+  public var runtimeTelemetry: DeliveryRuntimeTelemetryResponseDto?
 
-    public init(version: Version, releaseId: String, sequence: Int, requestedLocale: String, resolvedLocale: String, reason: Reason, fallbackLocale: String, supportedLocales: [String], translatedLocales: [String], localeMappings: [String: String], rollout: DeliveryRolloutResponseDto, bundlePath: String, overlays: [String], overlay: String?, missingKeyTelemetry: MissingKeyTelemetryPolicyResponseDto) {
-        self.version = version
-        self.releaseId = releaseId
-        self.sequence = sequence
-        self.requestedLocale = requestedLocale
-        self.resolvedLocale = resolvedLocale
-        self.reason = reason
-        self.fallbackLocale = fallbackLocale
-        self.supportedLocales = supportedLocales
-        self.translatedLocales = translatedLocales
-        self.localeMappings = localeMappings
-        self.rollout = rollout
-        self.bundlePath = bundlePath
-        self.overlays = overlays
-        self.overlay = overlay
-        self.missingKeyTelemetry = missingKeyTelemetry
-    }
+  public init(
+    version: Version, releaseId: String, sequence: Int, requestedLocale: String,
+    resolvedLocale: String, reason: Reason, fallbackLocale: String, supportedLocales: [String],
+    translatedLocales: [String], localeMappings: [String: String],
+    rollout: DeliveryRolloutResponseDto, bundlePath: String, overlays: [String], overlay: String?,
+    missingKeyTelemetry: MissingKeyTelemetryPolicyResponseDto,
+    runtimeTelemetry: DeliveryRuntimeTelemetryResponseDto?
+  ) {
+    self.version = version
+    self.releaseId = releaseId
+    self.sequence = sequence
+    self.requestedLocale = requestedLocale
+    self.resolvedLocale = resolvedLocale
+    self.reason = reason
+    self.fallbackLocale = fallbackLocale
+    self.supportedLocales = supportedLocales
+    self.translatedLocales = translatedLocales
+    self.localeMappings = localeMappings
+    self.rollout = rollout
+    self.bundlePath = bundlePath
+    self.overlays = overlays
+    self.overlay = overlay
+    self.missingKeyTelemetry = missingKeyTelemetry
+    self.runtimeTelemetry = runtimeTelemetry
+  }
 
-    public enum CodingKeys: String, CodingKey, CaseIterable {
-        case version
-        case releaseId
-        case sequence
-        case requestedLocale
-        case resolvedLocale
-        case reason
-        case fallbackLocale
-        case supportedLocales
-        case translatedLocales
-        case localeMappings
-        case rollout
-        case bundlePath
-        case overlays
-        case overlay
-        case missingKeyTelemetry
-    }
+  public enum CodingKeys: String, CodingKey, CaseIterable {
+    case version
+    case releaseId
+    case sequence
+    case requestedLocale
+    case resolvedLocale
+    case reason
+    case fallbackLocale
+    case supportedLocales
+    case translatedLocales
+    case localeMappings
+    case rollout
+    case bundlePath
+    case overlays
+    case overlay
+    case missingKeyTelemetry
+    case runtimeTelemetry
+  }
 
-    // Encodable protocol methods
+  // Encodable protocol methods
 
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(version, forKey: .version)
-        try container.encode(releaseId, forKey: .releaseId)
-        try container.encode(sequence, forKey: .sequence)
-        try container.encode(requestedLocale, forKey: .requestedLocale)
-        try container.encode(resolvedLocale, forKey: .resolvedLocale)
-        try container.encode(reason, forKey: .reason)
-        try container.encode(fallbackLocale, forKey: .fallbackLocale)
-        try container.encode(supportedLocales, forKey: .supportedLocales)
-        try container.encode(translatedLocales, forKey: .translatedLocales)
-        try container.encode(localeMappings, forKey: .localeMappings)
-        try container.encode(rollout, forKey: .rollout)
-        try container.encode(bundlePath, forKey: .bundlePath)
-        try container.encode(overlays, forKey: .overlays)
-        try container.encode(overlay, forKey: .overlay)
-        try container.encode(missingKeyTelemetry, forKey: .missingKeyTelemetry)
-    }
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(version, forKey: .version)
+    try container.encode(releaseId, forKey: .releaseId)
+    try container.encode(sequence, forKey: .sequence)
+    try container.encode(requestedLocale, forKey: .requestedLocale)
+    try container.encode(resolvedLocale, forKey: .resolvedLocale)
+    try container.encode(reason, forKey: .reason)
+    try container.encode(fallbackLocale, forKey: .fallbackLocale)
+    try container.encode(supportedLocales, forKey: .supportedLocales)
+    try container.encode(translatedLocales, forKey: .translatedLocales)
+    try container.encode(localeMappings, forKey: .localeMappings)
+    try container.encode(rollout, forKey: .rollout)
+    try container.encode(bundlePath, forKey: .bundlePath)
+    try container.encode(overlays, forKey: .overlays)
+    try container.encode(overlay, forKey: .overlay)
+    try container.encode(missingKeyTelemetry, forKey: .missingKeyTelemetry)
+    try container.encode(runtimeTelemetry, forKey: .runtimeTelemetry)
+  }
 }

@@ -9,28 +9,28 @@ import Foundation
 
 public struct AppAttestChallengeResponseDto: Sendable, Codable, Hashable {
 
-    public var challengeId: UUID
-    public var challenge: String
-    public var expiresAt: Date
+  public var challengeId: UUID
+  public var challenge: String
+  public var expiresAt: Date
 
-    public init(challengeId: UUID, challenge: String, expiresAt: Date) {
-        self.challengeId = challengeId
-        self.challenge = challenge
-        self.expiresAt = expiresAt
-    }
+  public init(challengeId: UUID, challenge: String, expiresAt: Date) {
+    self.challengeId = challengeId
+    self.challenge = challenge
+    self.expiresAt = expiresAt
+  }
 
-    public enum CodingKeys: String, CodingKey, CaseIterable {
-        case challengeId
-        case challenge
-        case expiresAt
-    }
+  public enum CodingKeys: String, CodingKey, CaseIterable {
+    case challengeId
+    case challenge
+    case expiresAt
+  }
 
-    // Encodable protocol methods
+  // Encodable protocol methods
 
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(challengeId, forKey: .challengeId)
-        try container.encode(challenge, forKey: .challenge)
-        try container.encode(expiresAt, forKey: .expiresAt)
-    }
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(challengeId, forKey: .challengeId)
+    try container.encode(challenge, forKey: .challenge)
+    try container.encode(expiresAt, forKey: .expiresAt)
+  }
 }

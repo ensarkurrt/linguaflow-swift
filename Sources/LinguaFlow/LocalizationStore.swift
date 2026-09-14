@@ -11,10 +11,10 @@ final class LocalizationStore: @unchecked Sendable {
   private let defaults: UserDefaults
   private let directory: URL
 
-  init(config: LinguaFlowConfig, defaults: UserDefaults) {
+  init(config: LinguaFlowConfig, defaults: UserDefaults, directory: URL? = nil) {
     self.config = config
     self.defaults = defaults
-    directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+    self.directory = directory ?? FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
       .appendingPathComponent("LinguaFlow", isDirectory: true)
   }
 
@@ -39,7 +39,11 @@ final class LocalizationStore: @unchecked Sendable {
 
   func manifest() -> LocaleManifest? { read("manifest") }
   func saveManifest(_ manifest: LocaleManifest) throws { try write(manifest, "manifest") }
-  func bundle(locale: String) -> CachedBundle? { read("bundle-\(locale)") }
+  func bundle(locale: String) -> CachedBundle? {
+    guard let bundle: CachedBundle = read("bundle-\(locale)") else { return nil }
+    guard (try? validateTranslationBundle(bundle.data)) != nil else { return nil }
+    return bundle
+  }
   func saveBundle(_ bundle: CachedBundle, locale: String) throws {
     try write(bundle, "bundle-\(locale)")
   }

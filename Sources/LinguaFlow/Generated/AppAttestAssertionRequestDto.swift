@@ -9,44 +9,47 @@ import Foundation
 
 public struct AppAttestAssertionRequestDto: Sendable, Codable, Hashable {
 
-    public enum Environment: String, Sendable, Codable, CaseIterable {
-        case development = "development"
-        case production = "production"
-    }
-    public var bundleId: String
-    public var environment: Environment
-    public var challengeId: UUID
-    public var challenge: String
-    public var keyId: String
-    public var assertion: String
+  public enum Environment: String, Sendable, Codable, CaseIterable {
+    case development = "development"
+    case production = "production"
+  }
+  public var bundleId: String
+  public var environment: Environment
+  public var challengeId: UUID
+  public var challenge: String
+  public var keyId: String
+  public var assertion: String
 
-    public init(bundleId: String, environment: Environment, challengeId: UUID, challenge: String, keyId: String, assertion: String) {
-        self.bundleId = bundleId
-        self.environment = environment
-        self.challengeId = challengeId
-        self.challenge = challenge
-        self.keyId = keyId
-        self.assertion = assertion
-    }
+  public init(
+    bundleId: String, environment: Environment, challengeId: UUID, challenge: String, keyId: String,
+    assertion: String
+  ) {
+    self.bundleId = bundleId
+    self.environment = environment
+    self.challengeId = challengeId
+    self.challenge = challenge
+    self.keyId = keyId
+    self.assertion = assertion
+  }
 
-    public enum CodingKeys: String, CodingKey, CaseIterable {
-        case bundleId
-        case environment
-        case challengeId
-        case challenge
-        case keyId
-        case assertion
-    }
+  public enum CodingKeys: String, CodingKey, CaseIterable {
+    case bundleId
+    case environment
+    case challengeId
+    case challenge
+    case keyId
+    case assertion
+  }
 
-    // Encodable protocol methods
+  // Encodable protocol methods
 
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(bundleId, forKey: .bundleId)
-        try container.encode(environment, forKey: .environment)
-        try container.encode(challengeId, forKey: .challengeId)
-        try container.encode(challenge, forKey: .challenge)
-        try container.encode(keyId, forKey: .keyId)
-        try container.encode(assertion, forKey: .assertion)
-    }
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(bundleId, forKey: .bundleId)
+    try container.encode(environment, forKey: .environment)
+    try container.encode(challengeId, forKey: .challengeId)
+    try container.encode(challenge, forKey: .challenge)
+    try container.encode(keyId, forKey: .keyId)
+    try container.encode(assertion, forKey: .assertion)
+  }
 }

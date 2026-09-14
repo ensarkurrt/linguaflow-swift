@@ -21,6 +21,11 @@ uygulama bundle'ına dahil edin. Kaynak önceliği remote, release ile eşleşen
 şeklindedir. Branch politikası gerektirmiyorsa `AppAttestProvider` opsiyoneldir.
 
 Eksik anahtar raporlaması için branch politikasını açın ve config'e
-`missingKeyTelemetryEnabled: true, appVersion: "1.0.0"` verin. SDK sinyalleri tekilleştirip
-partiler; telemetry hatası metin göstermeyi durdurmaz. Bekleyen partiyi `await
-client.flushMissingKeys()` ile elle gönderebilirsiniz.
+`missingKeyTelemetryEnabled: true` verin. SDK sürüm adı ve build numarasını varsayılan olarak ana
+uygulamanın `Bundle.main` bilgisinden okur; `appVersion` yalnız test veya özel sürüm etiketi için
+opsiyonel override'dır. SDK sinyalleri tekilleştirip partiler; telemetry hatası metin göstermeyi
+durdurmaz. Bekleyen partiyi `await client.flushMissingKeys()` ile elle gönderebilirsiniz.
+
+`AppAttestProvider` yapılandırıldığında SDK ayrıca bundle indirme/parse, Delivery API ve ICU
+sonuçlarını toplu runtime telemetrisi olarak gönderir. Bu sinyaller otomatik rollout sağlık
+kapılarında kullanılır; gönderim hataları çeviri akışını kesmez.

@@ -9,20 +9,20 @@ import Foundation
 
 public struct PlayIntegrityChallengeRequestDto: Sendable, Codable, Hashable {
 
-    public var packageName: String
+  public var packageName: String
 
-    public init(packageName: String) {
-        self.packageName = packageName
-    }
+  public init(packageName: String) {
+    self.packageName = packageName
+  }
 
-    public enum CodingKeys: String, CodingKey, CaseIterable {
-        case packageName
-    }
+  public enum CodingKeys: String, CodingKey, CaseIterable {
+    case packageName
+  }
 
-    // Encodable protocol methods
+  // Encodable protocol methods
 
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(packageName, forKey: .packageName)
-    }
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(packageName, forKey: .packageName)
+  }
 }

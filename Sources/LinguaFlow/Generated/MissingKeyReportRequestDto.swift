@@ -9,48 +9,51 @@ import Foundation
 
 public struct MissingKeyReportRequestDto: Sendable, Codable, Hashable {
 
-    public enum Platform: String, Sendable, Codable, CaseIterable {
-        case flutter = "flutter"
-        case react = "react"
-        case ios = "ios"
-        case android = "android"
-        case web = "web"
-        case unknown = "unknown"
-    }
-    public var requestId: UUID
-    public var releaseId: UUID
-    public var locale: String
-    public var appVersion: String = ""
-    public var platform: Platform
-    public var keys: [String]
+  public enum Platform: String, Sendable, Codable, CaseIterable {
+    case flutter = "flutter"
+    case react = "react"
+    case ios = "ios"
+    case android = "android"
+    case web = "web"
+    case unknown = "unknown"
+  }
+  public var requestId: UUID
+  public var releaseId: UUID?
+  public var locale: String
+  public var appVersion: String = ""
+  public var platform: Platform?
+  public var keys: [String]
 
-    public init(requestId: UUID, releaseId: UUID, locale: String, appVersion: String = "", platform: Platform, keys: [String]) {
-        self.requestId = requestId
-        self.releaseId = releaseId
-        self.locale = locale
-        self.appVersion = appVersion
-        self.platform = platform
-        self.keys = keys
-    }
+  public init(
+    requestId: UUID, releaseId: UUID? = nil, locale: String, appVersion: String = "",
+    platform: Platform? = nil, keys: [String]
+  ) {
+    self.requestId = requestId
+    self.releaseId = releaseId
+    self.locale = locale
+    self.appVersion = appVersion
+    self.platform = platform
+    self.keys = keys
+  }
 
-    public enum CodingKeys: String, CodingKey, CaseIterable {
-        case requestId
-        case releaseId
-        case locale
-        case appVersion
-        case platform
-        case keys
-    }
+  public enum CodingKeys: String, CodingKey, CaseIterable {
+    case requestId
+    case releaseId
+    case locale
+    case appVersion
+    case platform
+    case keys
+  }
 
-    // Encodable protocol methods
+  // Encodable protocol methods
 
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(requestId, forKey: .requestId)
-        try container.encode(releaseId, forKey: .releaseId)
-        try container.encode(locale, forKey: .locale)
-        try container.encode(appVersion, forKey: .appVersion)
-        try container.encode(platform, forKey: .platform)
-        try container.encode(keys, forKey: .keys)
-    }
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(requestId, forKey: .requestId)
+    try container.encodeIfPresent(releaseId, forKey: .releaseId)
+    try container.encode(locale, forKey: .locale)
+    try container.encode(appVersion, forKey: .appVersion)
+    try container.encodeIfPresent(platform, forKey: .platform)
+    try container.encode(keys, forKey: .keys)
+  }
 }
